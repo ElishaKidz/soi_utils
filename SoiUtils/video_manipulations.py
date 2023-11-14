@@ -46,7 +46,7 @@ def draw_video_from_bool_csv(video, df,bbox_cols_names, output_video_path,frame_
             break
 
         for i, bbox in enumerate(current_bboxes.values):
-            x, y, width, height = BoundingBox.from_coco(*pbx.convert_bbox(bbox,from_type=bbox_foramt,to_type='coco')).raw_values
+            x, y, width, height = BoundingBox.from_coco(*pbx.convert_bbox(bbox,from_type=bbox_foramt,to_type='coco',image_size=frame.shape[:2][::-1])).raw_values
             bbox_cls = current_classes.iloc[i]
             bbox_confidence = current_confidences.iloc[i]
             bbox_id = current_ids.iloc[i]
