@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from pathlib import Path
-from base import ImageDetectionSample,Detection
+from SoiUtils.datasets.base import ImageDetectionSample,Detection
 import cv2 as cv
 class ImageDetectionDataset(Dataset):
     ANNOTATION_FILE_NAME = 'annotations.json'
@@ -33,17 +33,22 @@ class ImageDetectionDataset(Dataset):
             item = image_detection_sample
         
         return item
+
+    def __len__(self):
+        return len(self.image_info)
     
 
 class ImageDetectionDatasetCollection(Dataset):
     def __init__(self,collection_root_dir,**kwargs) -> None:
         super().__init__()
         self.collection_root_dir = Path(collection_root_dir)
-        self.collection_items_root_dirs = [f for f in self.collection_root_dir.iterdir if f.is_dir()]
+        self.collection_items_root_dirs = [f for f in self.collection_root_dir.iterdir() if f.is_dir()]
         self.kwargs = kwargs
     
     def __getitem__(self, index:int) -> ImageDetectionDataset:
         
         return ImageDetectionDataset(self.collection_items_root_dirs[index],**self.kwargs) 
 
-
+    
+    def __len__(self):
+        return len(self.collection_items_root_dirs)

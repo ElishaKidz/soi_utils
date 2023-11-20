@@ -1,4 +1,3 @@
-import dataclasses
 from pybboxes import BoundingBox
 from typing import Union,List
 from dataclasses import dataclass
