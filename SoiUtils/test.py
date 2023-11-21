@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 if not os.path.exists("./test_datasets"):
     download_folder(Path('test_dataset'),'soi_experiments','annotations-example/test')
-video_collection = ImageDetectionDatasetCollection(Path('test_dataset/test'), "annotations.json")
+video_collection = ImageDetectionDatasetCollection(Path('test_dataset/test'), ["annotations.json"]*6)
 loader = DataLoader(video_collection, batch_size=2, collate_fn=collate_fn, shuffle=True)
 for i, (_, dets) in enumerate(loader):
     print(f"{i}. Number of dets {len(dets[0])}")

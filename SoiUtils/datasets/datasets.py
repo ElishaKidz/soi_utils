@@ -44,12 +44,13 @@ class ImageDetectionDataset(Dataset):
     
 
 class ImageDetectionDatasetCollection(Dataset):
-    def __init__(self, collection_root_dir: str, annotation_file_name: str, **kwargs) -> None:
+    def __init__(self, collection_root_dir: str, annotation_files_names: [str,], **kwargs) -> None:
         super().__init__()
         self.collection_root_dir = Path(collection_root_dir)
         self.collection_items_root_dirs = [f for f in self.collection_root_dir.iterdir() if f.is_dir()]
         self.kwargs = kwargs
-        self.collection = ConcatDataset([ImageDetectionDataset(f, annotation_file_name, **self.kwargs) for f in self.collection_items_root_dirs])
+        self.collection = ConcatDataset([ImageDetectionDataset(r, ann_f, **self.kwargs) for r, ann_f in 
+                                         zip(self.collection_items_root_dirs, annotation_files_names, strict=True)])
     
     def __getitem__(self, index:int) -> ImageDetectionDataset:
         return self.collection[index]
