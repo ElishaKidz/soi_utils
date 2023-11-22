@@ -3,6 +3,10 @@ from pycocotools.coco import COCO
 from pathlib import Path
 from SoiUtils.datasets.base import ImageDetectionSample,Detection
 import cv2 as cv
+import fiftyone as fo
+import warnings
+from shutil import copy, move
+
 
 def collate_fn(batch):
     return tuple(zip(*batch))
@@ -17,12 +21,20 @@ class ImageDetectionDataset(Dataset):
         all_dataset_info = COCO(self.dataset_root_dir/annotation_file_name)
         self.image_info = all_dataset_info.imgs
         self.image_ids = list(all_dataset_info.imgs.keys())
+        self.classes = all_dataset_info.cats
         self.imgToAnns = all_dataset_info.imgToAnns
         self.transforms = transforms
-
-    def __getitem__(self, index:int) -> ImageDetectionSample:
+    
+    @staticmethod
+    def get_bbox_type():
+        return ImageDetectionDataset.BBOX_FORMAT
+    
+    def get_image_file_path(self, index: int):
         image_id = self.image_ids[index]
-        image_file_path = str(self.dataset_root_dir/ImageDetectionDataset.FRAMES_DIR_NAME/self.image_info[image_id]['file_name'])
+        return str(self.dataset_root_dir/ImageDetectionDataset.FRAMES_DIR_NAME/self.image_info[image_id]['file_name'])
+
+    def __getitem__(self, index: int) -> ImageDetectionSample:
+        image_file_path = self.get_image_file_path(index)
         image = cv.imread(image_file_path)
         detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], cl=detection_annotation['category_id'], 
                                                   from_type=ImageDetectionDataset.BBOX_FORMAT, to_type="coco", image_size=image.shape[:2][::-1])
@@ -58,10 +70,78 @@ class ImageDetectionDatasetCollection(Dataset):
     def __len__(self):
         return len(self.collection)
 
-    def get_video_dataset(self, index):
+    def get_sub_dataset(self, index):
         return self.collection.datasets[index]
     
-    def num_videos(self):
+    def num_subsets(self):
         return len(self.collection_items_root_dirs)
+    
+    def export(self, export_dir_path, annotaions_file_name, copy_images=False, move_images=False):
+        """
+        Exports the dataset as a COCO dataset. A folder will be created at export_dir_path:
+        export_dir_path
+        |
+        |-data
+            |-img1.ext
+            |-img2.ext
+            |-...
+        |-annotaions_file_name.json
+        data is a folder that contains the images, however if copy_images and move_images are both false then 
+        the folder will not be created.
+
+        :param export_dir_path: where to save the dataset
+        :param annotations_file_name: the name to give to the annotations file
+        :param copy_images: if set to true, the original images will be copied to the exported dataset.
+        :param move_images: if set to true, the original images will be cut and moved to the exported dataset
+        """
+        if copy_images and move_images:
+            warnings.warn("Both copy_images and move_images flags are set to true. Defaulting to Copy.")
+            move_images = False
+
+        samples = []
+        for sub_d in self.collection.datasets:
+            for i in range(len(sub_d)):
+                image_file_path = Path(sub_d.get_image_file_path(i))
+                video_name = image_file_path.parents._parts[-3]
+                sample = fo.Sample(filepath=image_file_path)
+
+                orig_image = cv.imread(image_file_path.__str__())
+                _, annotations = sub_d[i]
+                detections = []
+                if len(annotations) > 0:
+                # Convert detections to FiftyOne format
+                    for det in annotations:
+                        det = Detection.load_generic_mode(
+                            bbox=det['bbox'], cl=det['cls'], from_type=sub_d.get_bbox_type(), to_type="fiftyone", image_size=orig_image.shape[:2][::-1])
+                        bbox, cls = det.bbox, det.cls
+
+                        detections.append(
+                            fo.Detection(label=sub_d.classes[cls]['name'], bounding_box=bbox, extracted_from=video_name)
+                        )
+
+                # Store detections in a field name of your choice
+                sample["ground_truth"] = fo.Detections(detections=detections)
+                samples.append(sample)
+
+        # Create dataset
+        dataset = fo.Dataset("my-detection-dataset", overwrite=True)
+        dataset.add_samples(samples)
+
+        export_mode = None
+        if copy_images:
+            export_mode = True
+        elif move_images:
+            export_mode = "move"
+
+        dataset.export(
+            dataset_type=fo.types.COCODetectionDataset,
+            export_dir=export_dir_path,
+            labels_path=annotaions_file_name,
+            label_field="ground_truth",
+            abs_paths=False,
+            export_media=export_mode
+        )            
+
+
 
 
