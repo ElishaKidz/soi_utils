@@ -163,3 +163,5 @@ cython_debug/
 # general file types
 *.PNG
 *.json
+*.png
+*.txt
