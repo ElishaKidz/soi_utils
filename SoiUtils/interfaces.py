@@ -18,7 +18,7 @@ class Updatable(metaclass=abc.ABCMeta):
     
 
     @abc.abstractmethod 
-    def update(*args,**kwargs) -> None:
+    def update(self,*args,**kwargs) -> None:
         # update the object according to a new configuration
         raise NotImplementedError
         
