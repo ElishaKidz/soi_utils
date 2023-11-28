@@ -10,7 +10,7 @@ import warnings
 def collate_fn(batch):
     return tuple(zip(*batch))
 
-
+#TODO: consider writing a prper fiftyone exporter
 def export_dataset(collection_datasets, export_dir_path, dataset_name, copy_images=False, move_images=False, tags=None):
         """
         Exports the dataset as a COCO dataset. A folder will be created at export_dir_path:
@@ -157,9 +157,4 @@ class ImageDetectionDatasetCollection(Dataset):
     
     def num_subsets(self):
         return len(self.collection_items_root_dirs)
-
-train_dataset = ImageDetectionDatasetCollection(Path('test_dataset/train'), ["annotations.json"]*4)
-validation_dataset = ImageDetectionDatasetCollection(Path('test_dataset/validation'), ["annotations.json"]*2)
-export_dataset(
-    [train_dataset, validation_dataset], "./soi_exp_dataset", "soi_exp_dataset", tags=["train", "validation"], copy_images=True)
 
