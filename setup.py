@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.1.0' 
+VERSION = '0.1.5' 
 DESCRIPTION = 'A Package that includes utility functions'
 LONG_DESCRIPTION = 'utils package that includes multiple utility functions that are used in different projects'
 
@@ -14,7 +14,7 @@ setup(
         description=DESCRIPTION,
         long_description=LONG_DESCRIPTION,
         packages=find_packages(),
-        install_requires=['numpy','opencv-python','torch'], # add any additional packages that 
+        install_requires=['numpy','opencv-python','torch', 'pybboxes', 'fiftyone'], # add any additional packages that 
         # needs to be installed along with your package. Eg: 'caer'
         
         keywords=['python'],
