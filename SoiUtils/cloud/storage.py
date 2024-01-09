@@ -22,7 +22,7 @@ def download_folder(destination_dir_path,remote_bucket_name,remote_folder_path_r
         relative_dir = Path("/".join(file_split[starting_index:-1]))
         final_file_local_path = destination_dir_path/relative_dir/file_name
         # check if file exists and its size match the local size
-        if final_file_local_path.exists() and os.stat(file_name).st_size == blob.size:
+        if final_file_local_path.exists() and os.stat(final_file_local_path).st_size == blob.size:
             if cache_files:
                 continue
             else:
