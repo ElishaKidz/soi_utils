@@ -1,5 +1,6 @@
 
 from google.cloud import storage
+import os
 from pathlib import Path
 
 def download_folder(destination_dir_path,remote_bucket_name,remote_folder_path_relative_to_bucket,cache_files=True,keep_remote_relative_hierarchy=False):
@@ -20,8 +21,8 @@ def download_folder(destination_dir_path,remote_bucket_name,remote_folder_path_r
             starting_index = reltaive_hierarchy_length
         relative_dir = Path("/".join(file_split[starting_index:-1]))
         final_file_local_path = destination_dir_path/relative_dir/file_name
-        
-        if final_file_local_path.exists():
+        # check if file exists and its size match the local size
+        if final_file_local_path.exists() and os.stat(file_name).st_size == blob.size:
             if cache_files:
                 continue
             else:
