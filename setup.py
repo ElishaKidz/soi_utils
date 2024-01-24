@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.2.5' 
+VERSION = '0.2.6' 
 DESCRIPTION = 'A Package that includes utility functions'
 LONG_DESCRIPTION = 'utils package that includes multiple utility functions that are used in different projects'
 

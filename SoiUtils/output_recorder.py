@@ -6,13 +6,13 @@ class OutputRecorder:
 
     def record_output(self, func):
         @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(*args, **kwargs):
             if self.record_all or self._should_record_function(func.__module__, func.__qualname__):
-                output = func(self, *args, **kwargs)
+                output = func(*args, **kwargs)
                 key = f"{func.__module__}.{func.__qualname__}"
                 self.recorded_outputs[key] = output
             else:
-                output = func(self, *args, **kwargs)
+                output = func(*args, **kwargs)
             return output
 
         return wrapper
