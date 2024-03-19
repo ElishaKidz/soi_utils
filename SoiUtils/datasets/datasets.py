@@ -2,9 +2,11 @@ from torch.utils.data import Dataset, ConcatDataset
 from pycocotools.coco import COCO
 from pathlib import Path
 from SoiUtils.datasets.base import ImageDetectionSample,Detection
-import cv2 as cv
-import fiftyone as fo
+from PIL import Image
+import numpy as np
+# import fiftyone as fo
 import warnings
+from typing import Union, List
 
 
 def collate_fn(batch):
@@ -94,47 +96,75 @@ def export_dataset(collection_datasets, export_dir_path, dataset_name, copy_imag
             )    
 
 class ImageDetectionDataset(Dataset):
-    FRAMES_DIR_NAME = "frames"
-    BBOX_FORMAT = 'coco'
-
-    def __init__(self,dataset_root_dir:str, annotation_file_name: str, transforms = None):
+    def __init__(self,
+                 dataset_root_dir: str, 
+                 annotation_file_name: str,
+                 origin_bbox_format: str = 'coco',
+                 target_bbox_format: str = 'coco',
+                 selected_classes: Union[str, List[str]] = 'all',
+                 transforms = None):
         super().__init__()
+
+        self.origin_bbox_format = origin_bbox_format
+        self.target_bbox_format = target_bbox_format
+
         self.dataset_root_dir = Path(dataset_root_dir)
         all_dataset_info = COCO(self.dataset_root_dir/annotation_file_name)
-        self.image_info = all_dataset_info.imgs
-        self.image_ids = list(all_dataset_info.imgs.keys())
+        self.images = all_dataset_info.imgs
+        self.frames_dir_name = all_dataset_info.dataset['info']['img_dir']
         self.classes = all_dataset_info.cats
         self.imgToAnns = all_dataset_info.imgToAnns
+
+        self.selected_classes = selected_classes
+        self.class_mapper = self.create_class_mapper()
         self.transforms = transforms
+
+    def create_class_mapper(self):
+        class_mapper = {}
+        for _, class_dict in self.classes.items():
+            original_class_id, class_name, supercatergory = class_dict['id'] ,class_dict['name'].lower(), class_dict['supercategory'].lower()
+            
+            if self.selected_classes == 'all':
+                class_mapper[original_class_id] = original_class_id
+
+            elif class_name in self.selected_classes:
+                class_mapper[original_class_id] = self.selected_classes.index(class_name) + 1
+            
+            elif supercatergory in self.selected_classes:
+                class_mapper[original_class_id] = self.selected_classes.index(class_name) + 1
     
-    @staticmethod
-    def get_bbox_type():
-        return ImageDetectionDataset.BBOX_FORMAT
+            else:
+                continue
+        
+        return class_mapper
+
     
     def get_image_file_path(self, index: int):
-        image_id = self.image_ids[index]
-        return str(self.dataset_root_dir/ImageDetectionDataset.FRAMES_DIR_NAME/self.image_info[image_id]['file_name'])
+        image_id = self.images[index]['id']
+        return str(self.dataset_root_dir/self.frames_dir_name/self.images[image_id]['file_name'])
 
     def __getitem__(self, index: int) -> ImageDetectionSample:
         image_file_path = self.get_image_file_path(index)
-        image = cv.imread(image_file_path)
-        detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], cl=detection_annotation['category_id'], 
-                                                  from_type=ImageDetectionDataset.BBOX_FORMAT, to_type="coco", image_size=image.shape[:2][::-1])
+        image = np.asarray(Image.open(image_file_path))
+        detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], 
+                                                  cl=self.class_mapper[detection_annotation['category_id']], 
+                                                  from_type=self.origin_bbox_format, 
+                                                  to_type=self.target_bbox_format, 
+                                                  image_size=image.shape[:2][::-1])
+                       
                        for detection_annotation in self.imgToAnns[index]]
 
-
-        image_detection_sample = ImageDetectionSample(image=image,detections=detections)
+        image_detection_sample = ImageDetectionSample(image=image, detections=detections)
 
         if self.transforms is not None:
             item = self.transforms(image_detection_sample)
-        
         else:
             item = image_detection_sample
         
         return item.image, [det.__dict__ for det in item.detections]
 
     def __len__(self):
-        return len(self.image_ids)
+        return len(self.images)
     
 
 class ImageDetectionDatasetCollection(Dataset):
@@ -158,3 +188,8 @@ class ImageDetectionDatasetCollection(Dataset):
     def num_subsets(self):
         return len(self.collection_items_root_dirs)
 
+if __name__ == "__main__":
+    dataset = ImageDetectionDataset("/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4", 
+                                    "/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4/annotations/thermal_classifier.json")
+    
+    print("Sdsadas")
