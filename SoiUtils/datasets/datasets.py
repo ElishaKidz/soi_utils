@@ -7,6 +7,7 @@ import numpy as np
 # import fiftyone as fo
 import warnings
 from typing import Union, List
+import yaml
 
 
 def collate_fn(batch):
@@ -98,18 +99,31 @@ def export_dataset(collection_datasets, export_dir_path, dataset_name, copy_imag
 class ImageDetectionDataset(Dataset):
     def __init__(self,
                  dataset_root_dir: str, 
-                 annotation_file_name: str,
+                 annotation_file_path: str,
                  origin_bbox_format: str = 'coco',
                  target_bbox_format: str = 'coco',
                  selected_classes: Union[str, List[str]] = 'all',
                  transforms = None):
+        """
+        dataset class for our tagged data in the gcp.
+
+        Args:
+            dataset_root_dir (str): path to the data directory.
+            annotation_file_path (str): path to the annotation .json file .
+            origin_bbox_format (str): 
+            target_bbox_format (str):
+            selected_classes (Union[str, List[str]]): classes that will apper in your dataset.
+        
+        Returns:
+            nn.Dataset
+        """
         super().__init__()
 
         self.origin_bbox_format = origin_bbox_format
         self.target_bbox_format = target_bbox_format
 
         self.dataset_root_dir = Path(dataset_root_dir)
-        all_dataset_info = COCO(self.dataset_root_dir/annotation_file_name)
+        all_dataset_info = COCO(annotation_file_path)
         self.images = all_dataset_info.imgs
         self.frames_dir_name = all_dataset_info.dataset['info']['img_dir']
         self.classes = all_dataset_info.cats
@@ -131,7 +145,7 @@ class ImageDetectionDataset(Dataset):
                 class_mapper[original_class_id] = self.selected_classes.index(class_name) + 1
             
             elif supercatergory in self.selected_classes:
-                class_mapper[original_class_id] = self.selected_classes.index(class_name) + 1
+                class_mapper[original_class_id] = self.selected_classes.index(supercatergory) + 1
     
             else:
                 continue
@@ -145,7 +159,7 @@ class ImageDetectionDataset(Dataset):
 
     def __getitem__(self, index: int) -> ImageDetectionSample:
         image_file_path = self.get_image_file_path(index)
-        image = np.asarray(Image.open(image_file_path))
+        image = np.asarray(Image.open(image_file_path).convert('RGB'))
         detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], 
                                                   cl=self.class_mapper[detection_annotation['category_id']], 
                                                   from_type=self.origin_bbox_format, 
@@ -156,25 +170,28 @@ class ImageDetectionDataset(Dataset):
 
         image_detection_sample = ImageDetectionSample(image=image, detections=detections)
 
+        telemetry = self.imgToAnns[index][0]['attributes'] if 'attributes' in self.imgToAnns[index][0] else None
+        
         if self.transforms is not None:
             item = self.transforms(image_detection_sample)
         else:
             item = image_detection_sample
         
-        return item.image, [det.__dict__ for det in item.detections]
+        return item.image, [det.__dict__ for det in item.detections], telemetry
 
     def __len__(self):
         return len(self.images)
     
 
 class ImageDetectionDatasetCollection(Dataset):
-    def __init__(self, collection_root_dir: str, annotation_files_names: [str,], **kwargs) -> None:
+    def __init__(self, datasets_yaml_path) -> None:
         super().__init__()
-        self.collection_root_dir = Path(collection_root_dir)
-        self.collection_items_root_dirs = [f for f in self.collection_root_dir.iterdir() if f.is_dir()]
-        self.kwargs = kwargs
-        self.collection = ConcatDataset([ImageDetectionDataset(r, ann_f, **self.kwargs) for r, ann_f in 
-                                         zip(self.collection_items_root_dirs, annotation_files_names, strict=True)])
+        with open(datasets_yaml_path, "r") as stream:
+            self.datasets_cfg = yaml.load(stream, Loader=yaml.FullLoader)
+
+        self.selected_classes = self.datasets_cfg['selected_classes']
+        self.collection = ConcatDataset([ImageDetectionDataset(selected_classes=self.selected_classes, **dataset_cfg) 
+                                         for dataset_cfg in self.datasets_cfg['datasets']])
     
     def __getitem__(self, index:int) -> ImageDetectionDataset:
         return self.collection[index]
@@ -186,10 +203,4 @@ class ImageDetectionDatasetCollection(Dataset):
         return self.collection.datasets[index]
     
     def num_subsets(self):
-        return len(self.collection_items_root_dirs)
-
-if __name__ == "__main__":
-    dataset = ImageDetectionDataset("/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4", 
-                                    "/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4/annotations/thermal_classifier.json")
-    
-    print("Sdsadas")
+        return len(self.datasets_cfg['datasets'])
