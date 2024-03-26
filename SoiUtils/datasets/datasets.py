@@ -158,6 +158,7 @@ class ImageDetectionDataset(Dataset):
         return str(self.dataset_root_dir/self.frames_dir_name/self.images[image_id]['file_name'])
 
     def __getitem__(self, index: int) -> ImageDetectionSample:
+        index = index + 1 # In COCO format the first frame has ID of 1 not 0
         image_file_path = self.get_image_file_path(index)
         image = np.asarray(Image.open(image_file_path).convert('RGB'))
         detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], 
@@ -170,7 +171,7 @@ class ImageDetectionDataset(Dataset):
 
         image_detection_sample = ImageDetectionSample(image=image, detections=detections)
 
-        telemetry = self.imgToAnns[index][0]['attributes'] if 'attributes' in self.imgToAnns[index][0] else None
+        telemetry = self.imgToAnns[index][0]['attributes'] if index in self.imgToAnns else {} # in case of frame without annotations this can't happen in real time !
         
         if self.transforms is not None:
             item = self.transforms(image_detection_sample)
