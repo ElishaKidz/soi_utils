@@ -2,6 +2,7 @@ selected_classes: ['person', 'vehicle']
 datasets: [
   {
     'dataset_root_dir': '/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4',
-    'annotation_file_path': '/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4/annotations/thermal_classifier.json'
+    'annotation_file_path': '/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4/annotations/thermal_classifier.json',
+    'telemetry_file_path': '/home/xd_eshaar_gcp_idf_il/data/record_29_12_2023_03_57_secondary_segment_0.mp4/telemetry.json'
   }
 ]
