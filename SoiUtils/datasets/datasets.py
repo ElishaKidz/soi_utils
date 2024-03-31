@@ -8,6 +8,7 @@ import numpy as np
 import warnings
 from typing import Union, List
 import yaml
+import json
 
 
 def collate_fn(batch):
@@ -100,6 +101,7 @@ class ImageDetectionDataset(Dataset):
     def __init__(self,
                  dataset_root_dir: str, 
                  annotation_file_path: str,
+                 telemetry_file_path: str,
                  origin_bbox_format: str = 'coco',
                  target_bbox_format: str = 'coco',
                  selected_classes: Union[str, List[str]] = 'all',
@@ -124,6 +126,7 @@ class ImageDetectionDataset(Dataset):
 
         self.dataset_root_dir = Path(dataset_root_dir)
         all_dataset_info = COCO(annotation_file_path)
+        self.frame2telemetry = json.load(open(telemetry_file_path))
         self.images = all_dataset_info.imgs
         self.frames_dir_name = all_dataset_info.dataset['info']['img_dir']
         self.classes = all_dataset_info.cats
@@ -171,7 +174,7 @@ class ImageDetectionDataset(Dataset):
 
         image_detection_sample = ImageDetectionSample(image=image, detections=detections)
 
-        telemetry = self.imgToAnns[index][0]['attributes'] if index in self.imgToAnns else {} # in case of frame without annotations this can't happen in real time !
+        telemetry = self.frame2telemetry["data"][index - 1]
         
         if self.transforms is not None:
             item = self.transforms(image_detection_sample)
