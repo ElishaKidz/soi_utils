@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8838f867-13c4-455c-8be1-efb46fb45a54" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/SoiUtils/datasets/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/SoiUtils/datasets/datasets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SoiUtils/datasets/example_datasets.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/SoiUtils/datasets/example_datasets.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SoiUtils/check_tags.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,38 +30,14 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "com.google.cloudcode.ide_session_index": "20240331_0001",
-    "last_opened_file_path": "C:/Users/orber/PycharmProjects/soi_utils"
+    "com.google.cloudcode.ide_session_index": "20240403_0001",
+    "last_opened_file_path": "C:/Users/orber/PycharmProjects/soi_utils/SoiUtils"
   }
 }]]></component>
-  <component name="RunManager">
-    <configuration name="datasets" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="soi_utils" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SoiUtils/datasets" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SoiUtils/datasets/datasets.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.datasets" />
-      </list>
-    </recent_temporary>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\orber\PycharmProjects\soi_utils\SoiUtils" />
+    </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -71,12 +47,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1711884922310</updated>
-      <workItem from="1711884923703" duration="549000" />
+      <workItem from="1711884923703" duration="1247000" />
+      <workItem from="1712146309326" duration="400000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
