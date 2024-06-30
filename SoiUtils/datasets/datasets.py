@@ -165,6 +165,7 @@ class ImageDetectionDataset(Dataset):
         index = index + 1 # In COCO format the first frame has ID of 1 not 0
         image_file_path = self.get_image_file_path(index)
         image = np.asarray(Image.open(image_file_path).convert('RGB'))
+        track_ids = [ann["attributes"]["track_id"] for ann in self.imgToAnns[index]]
         detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], 
                                                   cl=self.class_mapper[detection_annotation['category_id']], 
                                                   from_type=self.origin_bbox_format, 
@@ -182,7 +183,7 @@ class ImageDetectionDataset(Dataset):
         else:
             item = image_detection_sample
         
-        return item.image, [det.__dict__ for det in item.detections], telemetry
+        return item.image, [(_id, det.__dict__) for _id, det in zip(track_ids, item.detections)], telemetry
 
     def __len__(self):
         return len(self.images)
