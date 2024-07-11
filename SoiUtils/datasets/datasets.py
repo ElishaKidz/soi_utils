@@ -161,29 +161,45 @@ class ImageDetectionDataset(Dataset):
         image_id = self.images[index]['id']
         return str(self.dataset_root_dir/self.frames_dir_name/self.images[image_id]['file_name'])
 
+    def has_tracks(self, require_moving=True, require_no_occlusion=True):
+        for i in range(self.__len__()):
+            for ann in self.imgToAnns[i+1]:
+                if "track_id" in ann["attributes"]:
+                    if (require_moving and ann["attributes"]["static"]) or (require_no_occlusion and ann["attributes"]["occluded"]):
+                        continue
+                    return True
+        return False
+    
     def __getitem__(self, index: int) -> ImageDetectionSample:
         index = index + 1 # In COCO format the first frame has ID of 1 not 0
         image_file_path = self.get_image_file_path(index)
         image = np.asarray(Image.open(image_file_path).convert('RGB'))
-        track_ids = [ann["attributes"]["track_id"] for ann in self.imgToAnns[index]]
-        detections = [Detection.load_generic_mode(bbox=detection_annotation['bbox'], 
-                                                  cl=self.class_mapper[detection_annotation['category_id']], 
+        telemetry = self.frame2telemetry[index - 1]
+
+        attrs, detections = [], []
+        for ann in self.imgToAnns[index]:
+            cur_attr = ann["attributes"]
+            detections.append(Detection.load_generic_mode(bbox=ann['bbox'], 
+                                                  cl=self.class_mapper[ann['category_id']], 
                                                   from_type=self.origin_bbox_format, 
                                                   to_type=self.target_bbox_format, 
-                                                  image_size=image.shape[:2][::-1])
+                                                  image_size=image.shape[:2][::-1]))
                        
-                       for detection_annotation in self.imgToAnns[index]]
-
-        image_detection_sample = ImageDetectionSample(image=image, detections=detections)
-
-        telemetry = self.frame2telemetry[index - 1]
+            attrs.append(
+                {
+                    "static": cur_attr["static"],
+                    "occluded": cur_attr["occluded"],
+                    "track_id": cur_attr["track_id"],
+                }
+            )
         
+        image_detection_sample = ImageDetectionSample(image=image, detections=detections) 
         if self.transforms is not None:
             item = self.transforms(image_detection_sample)
         else:
             item = image_detection_sample
-        
-        return item.image, [(_id, det.__dict__) for _id, det in zip(track_ids, item.detections)], telemetry
+            
+        return item.image, telemetry, [det.__dict__ for det in item.detections], attrs
 
     def __len__(self):
         return len(self.images)
